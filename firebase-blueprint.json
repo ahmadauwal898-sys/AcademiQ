@@ -1,0 +1,264 @@
+{
+  "entities": {
+    "School": {
+      "title": "School",
+      "description": "Multi-tenant educational institution registered on AcademiQ",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "slug": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "address": { "type": "string", "maxLength": 500 },
+        "country": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "school_level": { "type": "string", "maxLength": 50 },
+        "logo_url": { "type": "string", "maxLength": 50000 },
+        "result_template_json": { "type": "string", "maxLength": 50000 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "suspended"] },
+        "is_payment_verified": { "type": "number" },
+        "created_at": { "type": "string", "maxLength": 50 },
+        "updated_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "name", "email", "status"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Enrolled student record in an AcademiQ school",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "admission_number": { "type": "string", "maxLength": 50 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "gender": { "type": "string", "enum": ["Male", "Female"] },
+        "class_id": { "type": "string", "maxLength": 128 },
+        "arm_id": { "type": "string", "maxLength": 128 },
+        "parent_name": { "type": "string", "maxLength": 150 },
+        "parent_phone": { "type": "string", "maxLength": 50 },
+        "parent_email": { "type": "string", "maxLength": 150 },
+        "enrollment_status": { "type": "string", "enum": ["active", "transferred", "graduated", "withdrawn"] },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "admission_number", "full_name"]
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Academic faculty member record for a school",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "user_id": { "type": "string", "maxLength": 128 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "specialization": { "type": "string", "maxLength": 100 },
+        "assigned_classes": { "type": "string", "maxLength": 500 },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "full_name", "email"]
+    },
+    "Parent": {
+      "title": "Parent",
+      "description": "Parent or guardian record connected to student profiles",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 150 },
+        "relationship": { "type": "string", "maxLength": 50 },
+        "student_ids": { "type": "string", "maxLength": 500 },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "full_name"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Daily or roll-call attendance record for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "student_id": { "type": "string", "maxLength": 128 },
+        "class_id": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["present", "absent", "late", "excused"] },
+        "remarks": { "type": "string", "maxLength": 200 },
+        "recorded_by_user_id": { "type": "string", "maxLength": 128 },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "student_id", "class_id", "date", "status"]
+    },
+    "FeePayment": {
+      "title": "FeePayment",
+      "description": "Student school fee transaction and receipt record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "student_id": { "type": "string", "maxLength": 128 },
+        "category_id": { "type": "string", "maxLength": 128 },
+        "amount_paid": { "type": "number" },
+        "payment_method": { "type": "string", "maxLength": 50 },
+        "receipt_number": { "type": "string", "maxLength": 100 },
+        "recorded_by_user_id": { "type": "string", "maxLength": 128 },
+        "payment_date": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 250 }
+      },
+      "required": ["id", "school_id", "student_id", "amount_paid", "receipt_number"]
+    },
+    "StudentScore": {
+      "title": "StudentScore",
+      "description": "Examination and continuous assessment scores for a student in a subject and term",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "student_id": { "type": "string", "maxLength": 128 },
+        "subject_id": { "type": "string", "maxLength": 128 },
+        "class_id": { "type": "string", "maxLength": 128 },
+        "term_id": { "type": "string", "maxLength": 128 },
+        "session_id": { "type": "string", "maxLength": 128 },
+        "ca1": { "type": "number" },
+        "ca2": { "type": "number" },
+        "ca3": { "type": "number" },
+        "exam": { "type": "number" },
+        "total": { "type": "number" },
+        "grade": { "type": "string", "maxLength": 5 },
+        "remark": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["draft", "submitted", "under_review", "approved", "published", "locked"] },
+        "entered_by_user_id": { "type": "string", "maxLength": 128 },
+        "updated_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "student_id", "subject_id", "term_id", "session_id", "total"]
+    },
+    "TermResult": {
+      "title": "TermResult",
+      "description": "Compiled term report card result snapshot for a student",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "student_id": { "type": "string", "maxLength": 128 },
+        "class_id": { "type": "string", "maxLength": 128 },
+        "term_id": { "type": "string", "maxLength": 128 },
+        "session_id": { "type": "string", "maxLength": 128 },
+        "total_score": { "type": "number" },
+        "average_score": { "type": "number" },
+        "position": { "type": "number" },
+        "class_size": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "approved", "published", "locked"] },
+        "snapshot_json": { "type": "string", "maxLength": 500000 },
+        "updated_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "student_id", "term_id", "session_id"]
+    },
+    "SchoolUser": {
+      "title": "SchoolUser",
+      "description": "Authorized staff or administrator profile belonging to a school tenant",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["school_admin", "teacher", "bursar", "student_parent"] },
+        "phone": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "maxLength": 50 },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "school_id", "email", "full_name", "role"]
+    },
+    "CloudSyncState": {
+      "title": "CloudSyncState",
+      "description": "Cloud backup snapshot metadata ensuring zero data loss across sessions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "school_id": { "type": "string", "maxLength": 128 },
+        "backup_timestamp": { "type": "string", "maxLength": 50 },
+        "total_records": { "type": "number" },
+        "version": { "type": "string", "maxLength": 20 },
+        "payload_json": { "type": "string", "maxLength": 1000000 }
+      },
+      "required": ["id", "school_id", "backup_timestamp"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Platform Super Administrator record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 150 },
+        "full_name": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["super_admin"] },
+        "created_at": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "ConnectionTest": {
+      "title": "ConnectionTest",
+      "description": "Healthcheck and connectivity validation document",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "maxLength": 50 },
+        "timestamp": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["status"]
+    }
+  },
+  "firestore": {
+    "/schools/{schoolId}": {
+      "schema": "#/entities/School",
+      "description": "School details and configuration"
+    },
+    "/schools/{schoolId}/students/{studentId}": {
+      "schema": "#/entities/Student",
+      "description": "Students belonging to the school"
+    },
+    "/schools/{schoolId}/teachers/{teacherId}": {
+      "schema": "#/entities/Teacher",
+      "description": "Faculty staff profiles belonging to the school"
+    },
+    "/schools/{schoolId}/parents/{parentId}": {
+      "schema": "#/entities/Parent",
+      "description": "Parent and guardian records connected to school students"
+    },
+    "/schools/{schoolId}/attendance/{attendanceId}": {
+      "schema": "#/entities/AttendanceRecord",
+      "description": "Student daily attendance entries"
+    },
+    "/schools/{schoolId}/fees/{feeId}": {
+      "schema": "#/entities/FeePayment",
+      "description": "Student fee payments and receipts"
+    },
+    "/schools/{schoolId}/scores/{scoreId}": {
+      "schema": "#/entities/StudentScore",
+      "description": "Subject examination and continuous assessment scores"
+    },
+    "/schools/{schoolId}/term_results/{resultId}": {
+      "schema": "#/entities/TermResult",
+      "description": "Compiled report card snapshots"
+    },
+    "/schools/{schoolId}/users/{userId}": {
+      "schema": "#/entities/SchoolUser",
+      "description": "Authorized staff and admin login profiles for the school"
+    },
+    "/schools/{schoolId}/cloud_sync/{syncId}": {
+      "schema": "#/entities/CloudSyncState",
+      "description": "Cloud persistent backup state"
+    },
+    "/admins/{adminId}": {
+      "schema": "#/entities/Admin",
+      "description": "Super admin authorization documents"
+    },
+    "/test/connection": {
+      "schema": "#/entities/ConnectionTest",
+      "description": "Firestore connection check"
+    }
+  }
+}

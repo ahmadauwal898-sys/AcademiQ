@@ -1,0 +1,1011 @@
+PROJECT TITLE
+
+MultiSchool Pro — A Complete Multi-Tenant School Management Platform
+
+1. YOUR ROLE
+
+Act as a senior full-stack software engineer, database architect, UI/UX designer, cybersecurity engineer, and school management software specialist.
+
+Build a complete, functional, production-oriented, multi-tenant School Management System called MultiSchool Pro.
+
+Do not build merely a landing page, static dashboard, UI prototype, or demonstration with fake data.
+
+Build a working application with real authentication, persistent database storage, backend business logic, role-based permissions, school-specific data isolation, result processing, PDF generation, printing, and subscription management.
+
+I am building this project using Google AI Studio and may be working from an Android phone. Make the interface mobile-friendly and explain any setup or deployment steps that cannot be completed automatically.
+
+If a requirement cannot be implemented directly in your environment, clearly identify it and provide the actual implementation files and precise setup instructions. Never pretend an incomplete feature is working.
+
+2. MAIN PURPOSE
+
+Create one central platform that can serve hundreds or thousands of independent schools.
+
+Each school must be able to create an account, submit its information, obtain approval, subscribe to a plan, and manage its school operations.
+
+Supported school levels:
+
+- Nursery.
+- Primary.
+- Junior secondary.
+- Senior secondary.
+
+Every school must have its own:
+
+- School name and logo.
+- School profile and contact details.
+- Administrator account.
+- Academic sessions and terms.
+- Classes and arms.
+- Students and admission numbers.
+- Teachers and staff.
+- Subjects and subject assignments.
+- Attendance records.
+- Examination scores.
+- Results and report cards.
+- School-specific settings.
+
+A school must never see or modify another school's private information.
+
+Use secure, server-enforced tenant isolation throughout the application.
+
+3. USER TYPES AND PERMISSIONS
+
+Implement the following user roles.
+
+A. Platform Super Administrator
+
+This is the owner of the entire MultiSchool Pro platform.
+
+The super administrator must be able to:
+
+- View all registered schools.
+- Review applications from new schools.
+- Approve, reject, suspend, or reactivate schools.
+- View each school's subscription status.
+- Create and manage subscription plans.
+- Monitor subscription payments and expiry dates.
+- Manage platform settings.
+- View platform-wide usage statistics.
+- View audit logs and security events.
+- Manage support requests.
+- Configure the public website.
+- Monitor application errors and system health.
+- View aggregate statistics without unnecessarily exposing private student records.
+
+Only authorized super administrators may access platform-wide administrative functions.
+
+B. School Administrator
+
+Each school administrator must have access only to the school associated with their account.
+
+They can:
+
+- Update school information.
+- Upload and change the school logo.
+- Manage teachers and staff.
+- Register students.
+- Manage classes and arms.
+- Create academic sessions and terms.
+- Assign subjects to classes and teachers.
+- Manage attendance.
+- Configure grading systems.
+- Review examination scores.
+- Approve and publish results.
+- Generate report cards and class result sheets.
+- Manage school-level users and permissions.
+- View subscription status.
+- Renew subscriptions.
+- View school-specific reports.
+
+C. Teachers
+
+Teachers can:
+
+- View their assigned classes.
+- View their assigned subjects.
+- View students in their assigned classes.
+- Record attendance.
+- Enter examination and assessment scores.
+- Save scores as drafts.
+- Edit scores before result approval, subject to permissions.
+- Submit completed scores for review.
+- View published results for their assigned classes and subjects.
+
+Teachers must not be able to publish or modify approved results unless explicitly authorized.
+
+D. Bursar or Accountant
+
+Provide optional finance permissions for:
+
+- Recording school fee payments.
+- Tracking outstanding fees.
+- Generating payment receipts.
+- Viewing financial reports.
+- Managing fee categories.
+
+Restrict access to financial information according to assigned permissions.
+
+E. Students and Parents
+
+Provide an optional portal where authorized students and parents can:
+
+- View published results.
+- View attendance information.
+- View assigned announcements.
+- View fee balances when authorized.
+
+Public result checking must also work without requiring a full student account.
+
+4. SCHOOL REGISTRATION AND APPROVAL
+
+Create a complete school registration workflow.
+
+The registration form must collect:
+
+- School name.
+- School email.
+- School phone number.
+- School address.
+- Country and state.
+- School level.
+- Administrator's full name.
+- Administrator's email.
+- Administrator's phone number.
+- Password.
+- Confirmation of terms and conditions.
+
+Allow the school to upload its logo during registration or afterward.
+
+After registration:
+
+1. Create the school record.
+2. Create the administrator's user account securely.
+3. Set the school status to Pending Approval.
+4. Prevent the school from accessing restricted operational features.
+5. Notify the platform administrator of the application.
+6. Allow the super administrator to approve or reject the application.
+7. Notify the school administrator of the decision.
+8. After approval, allow the school to select a subscription plan and activate its account.
+
+Use secure email verification and password-reset functionality.
+
+Never store plaintext passwords.
+
+A rejected, suspended, or unapproved school must not be able to bypass the approval process by directly accessing application URLs or APIs.
+
+5. MULTI-SCHOOL ARCHITECTURE
+
+This is a critical requirement.
+
+Implement genuine multi-tenancy.
+
+Use a relational database with a dedicated school identifier on every school-owned record.
+
+For example:
+
+- schools
+- users
+- students
+- teachers
+- classes
+- subjects
+- sessions
+- terms
+- attendance
+- assessments
+- results
+- fee records
+- announcements
+- subscriptions
+
+Every school-owned record must be associated with the correct school.
+
+Enforce school ownership on the server for every request.
+
+Never trust a school ID supplied by the browser without checking the authenticated user's permissions.
+
+Prevent users from:
+
+- Reading another school's student records.
+- Modifying another school's scores.
+- Downloading another school's report cards.
+- Accessing another school's invoices.
+- Changing their school ID to access another tenant.
+- Accessing another tenant's records through predictable URLs or API parameters.
+
+Apply tenant isolation to database queries, file access, report generation, exports, background tasks, and administrative operations.
+
+Test tenant isolation with automated security tests.
+
+Only explicitly authorized platform administrators may access cross-school administration features.
+
+6. ACADEMIC SESSION AND TERM MANAGEMENT
+
+Allow each school to configure:
+
+- Academic sessions, such as 2026/2027.
+- First term.
+- Second term.
+- Third term.
+- Term start and end dates.
+- Result entry deadlines.
+- Result publication dates.
+- Class promotion periods.
+
+Each school must manage its academic calendar independently.
+
+Support different sessions and terms without overwriting historical results.
+
+Keep published results available for authorized historical viewing and printing.
+
+7. STUDENT MANAGEMENT
+
+Build a comprehensive student registration and management module.
+
+Student information should include:
+
+- Student's full name.
+- Admission number.
+- Date of birth.
+- Gender.
+- Class.
+- Class arm.
+- Academic session.
+- Parent or guardian name.
+- Parent or guardian phone number.
+- Address.
+- Student photograph, if provided.
+- Admission date.
+- Enrollment status.
+
+Automatically generate unique admission numbers within each school, while allowing authorized administrators to enter an existing admission number.
+
+Prevent duplicate admission numbers within the same school.
+
+Allow administrators to:
+
+- Register students individually.
+- Edit student information.
+- Transfer students between classes.
+- Promote students.
+- Withdraw students.
+- Search and filter student records.
+- Import student lists using CSV templates.
+- Export authorized student records.
+- Print student lists.
+
+Validate uploaded files and provide clear error messages for invalid records.
+
+Preserve historical results when a student changes class or academic session.
+
+8. CLASS AND SUBJECT MANAGEMENT
+
+Allow each school to create its own:
+
+- Nursery classes.
+- Primary classes.
+- Junior secondary classes.
+- Senior secondary classes.
+- Class arms.
+- Subjects.
+- Subject assignments.
+- Teacher assignments.
+
+Do not hard-code a fixed list of classes.
+
+Allow each school to configure its own class names, subject lists, grading rules, and class structures.
+
+A teacher should only access classes and subjects they are authorized to teach.
+
+9. EXAMINATION AND RESULT MANAGEMENT
+
+This is one of the most important modules.
+
+Build a real examination result processing system.
+
+Support configurable assessment structures, such as:
+
+- Continuous assessment 1.
+- Continuous assessment 2.
+- Assignment.
+- Test.
+- Examination.
+
+Allow schools to configure the components and their maximum scores.
+
+For example, a school might use:
+
+- First assessment: 10 marks.
+- Second assessment: 10 marks.
+- Examination: 80 marks.
+- Total: 100 marks.
+
+These values must be configurable by the school.
+
+Validate that no score exceeds its permitted maximum.
+
+Prevent negative scores unless a future authorized configuration explicitly supports them.
+
+Automatically calculate:
+
+- Assessment totals.
+- Examination totals.
+- Total subject score.
+- Grade.
+- Grade remark.
+- Student's total marks across subjects.
+- Average score.
+- Subject class average, where applicable.
+- Class position.
+- Overall class performance statistics.
+
+All authoritative result calculations must happen on the server, not exclusively in browser JavaScript.
+
+Use decimal-safe numeric calculations and consistent rounding rules.
+
+Provide a configurable grading scale. For example:
+
+70–100: A — Excellent.
+60–69: B — Very Good.
+50–59: C — Good.
+45–49: D — Fair.
+40–44: E — Pass.
+0–39: F — Fail.
+
+Treat this as a sample scale. Each school must be able to change its grading boundaries and remarks.
+
+Allow the school to configure how class positions are calculated, including how ties are handled.
+
+Support a result entry table that allows authorized teachers to enter scores for an entire class efficiently.
+
+Include:
+
+- Student name.
+- Admission number.
+- Assessment scores.
+- Examination score.
+- Total score.
+- Grade.
+- Remarks.
+- Save status.
+
+Include validation, autosave where reliable, clear success messages, and error recovery.
+
+Allow teachers to save drafts and submit completed results for review.
+
+10. RESULT APPROVAL AND LOCKING
+
+Implement a proper result workflow.
+
+Result states should include:
+
+- Draft.
+- Submitted.
+- Under Review.
+- Approved.
+- Published.
+- Locked.
+
+The workflow must prevent unauthorized changes to approved or published results.
+
+Only authorized users can approve and publish results.
+
+If an approved result must be corrected, require an authorized correction or reopening process.
+
+Record:
+
+- Previous score.
+- New score.
+- Person who made the change.
+- Date and time.
+- Reason for the correction.
+- Person who approved the correction.
+
+Maintain an audit trail for all important result changes.
+
+Published results must not change silently when grading settings are edited later.
+
+Preserve the exact published result snapshot or version needed to reproduce the approved report card.
+
+11. REPORT CARDS AND RESULT PRINTING
+
+Implement two essential printing features.
+
+A. Individual Student Report Card
+
+Generate a professional report card for each student.
+
+Include:
+
+- School logo.
+- School name.
+- School address and contact information.
+- Student's name.
+- Admission number.
+- Student photograph, if available.
+- Class and arm.
+- Academic session.
+- Term.
+- Subject names.
+- Assessment scores.
+- Examination scores.
+- Total subject scores.
+- Grades.
+- Subject remarks.
+- Total marks.
+- Average.
+- Class position, where configured.
+- Attendance statistics.
+- Teacher's comment.
+- Headteacher or principal's comment.
+- Next term's resumption date.
+- Teacher's signature area.
+- Headteacher or principal's signature area.
+- Official stamp area.
+
+Allow authorized school administrators to customize report card headings and school-specific details.
+
+B. Complete Class Result Sheet
+
+Generate a class result sheet containing all students in the selected class.
+
+Include:
+
+- School logo and name.
+- Class and arm.
+- Academic session and term.
+- Student names.
+- Admission numbers.
+- Subject totals.
+- Grades where appropriate.
+- Total marks.
+- Average scores.
+- Positions.
+- Class statistics.
+
+Provide readable layouts for classes with many subjects.
+
+Printing Requirements
+
+Provide:
+
+- Print Individual Report Card.
+- Print Selected Students.
+- Print All Report Cards in a Class.
+- Print Complete Class Result Sheet.
+- Download Report Card as PDF.
+- Download Class Result Sheet as PDF.
+
+PDF files must use the correct school's branding and only include authorized data.
+
+Optimize layouts for A4 paper.
+
+Provide print previews and page-break handling.
+
+Use a reliable server-side PDF-generation library compatible with the backend.
+
+Do not create fake download buttons. Connect every printing and PDF button to a functioning implementation.
+
+12. PUBLIC RESULT CHECKING PORTAL
+
+Create a public result-checking page for parents and students.
+
+The user must enter:
+
+- School selection or school-specific public result page.
+- Student admission number.
+- Secure result-checking code.
+
+The system must verify the information and display only the matching student's published result.
+
+Never expose draft, unapproved, unpublished, or locked internal records.
+
+Use a secure code system with sufficient randomness.
+
+Store verification codes securely, preferably as cryptographic hashes.
+
+Allow schools to issue, revoke, and regenerate result-checking codes.
+
+Provide rate limiting and abuse protection.
+
+Do not reveal whether a particular admission number exists before the verification process succeeds.
+
+Allow the school to configure whether public users may view results, download PDFs, or print them.
+
+The public portal must not allow users to browse other students' results.
+
+13. ATTENDANCE MANAGEMENT
+
+Implement:
+
+- Daily student attendance.
+- Teacher attendance where authorized.
+- Present, Absent, Late, and Excused statuses.
+- Attendance by class and date.
+- Monthly attendance summaries.
+- Term attendance summaries.
+- Attendance statistics on report cards.
+
+Prevent duplicate attendance entries for the same student, date, and relevant attendance session.
+
+Restrict records to the correct school and authorized class.
+
+14. SCHOOL FEES AND FINANCIAL RECORDS
+
+Provide an optional school-fee management module.
+
+Allow schools to configure:
+
+- Tuition fees.
+- Examination fees.
+- Development fees.
+- Other fee categories.
+
+Support:
+
+- Recording payments.
+- Recording partial payments.
+- Tracking outstanding balances.
+- Generating receipts.
+- Viewing student payment histories.
+- Generating fee summaries.
+
+Keep school financial records isolated.
+
+Do not claim a payment has been received unless it has been recorded or verified through an actual payment integration.
+
+Design a payment integration layer for future providers such as Paystack or Flutterwave.
+
+Use verified server-side payment webhooks for online payments.
+
+Do not store bank card details.
+
+If a payment provider has not been configured, clearly indicate that online payment is not active.
+
+15. SUBSCRIPTION AND BILLING SYSTEM
+
+The platform owner must be able to create and manage:
+
+- Free trial plans, if enabled.
+- Monthly subscriptions.
+- Annual subscriptions.
+
+Allow the platform owner to configure:
+
+- Plan name.
+- Price.
+- Billing interval.
+- Maximum number of students, if applicable.
+- Maximum number of staff, if applicable.
+- Available modules.
+- Trial duration.
+- Grace period.
+- Renewal settings.
+
+Each school must have its own subscription record.
+
+Track:
+
+- Current plan.
+- Subscription status.
+- Start date.
+- Expiry date.
+- Payment status.
+- Renewal history.
+
+Support statuses such as:
+
+- Pending.
+- Active.
+- Expired.
+- Past Due.
+- Suspended.
+- Cancelled.
+
+Implement an actual billing workflow.
+
+If an online payment provider is configured, verify payments through secure server-side webhooks.
+
+If no provider is configured, provide a controlled manual payment confirmation process for the platform administrator.
+
+Never automatically mark an unverified payment as successful.
+
+When a subscription expires, apply the platform owner's configured restrictions. Clearly explain the restrictions to the school.
+
+Do not silently delete student records, historical results, or school data because a subscription has expired.
+
+Provide renewal reminders and an appropriate grace period.
+
+16. DASHBOARDS AND REPORTS
+
+Create a dedicated dashboard for each user role.
+
+Platform Administrator Dashboard
+
+Show:
+
+- Total registered schools.
+- Pending school applications.
+- Active schools.
+- Suspended schools.
+- Active subscriptions.
+- Expired subscriptions.
+- Subscription revenue based on recorded and verified payments.
+- Recent registrations.
+- Recent subscription activity.
+
+School Administrator Dashboard
+
+Show:
+
+- Total students.
+- Total teachers.
+- Total classes.
+- Attendance summaries.
+- Results awaiting approval.
+- Published results.
+- Outstanding fees, when the finance module is enabled.
+- Subscription information.
+- Recent school activities.
+
+Teacher Dashboard
+
+Show:
+
+- Assigned classes.
+- Assigned subjects.
+- Pending score entries.
+- Submitted results.
+- Attendance tasks.
+- Recent announcements.
+
+Every statistic must be calculated from actual authorized database records.
+
+17. ANNOUNCEMENTS AND NOTIFICATIONS
+
+Provide school-specific announcements.
+
+Allow authorized administrators to publish notices to:
+
+- All school staff.
+- Teachers.
+- Selected classes.
+- Parents or students, when those portals are enabled.
+
+Implement in-app notifications.
+
+Prepare an email notification service for:
+
+- School registration.
+- Approval decisions.
+- Password resets.
+- Subscription reminders.
+- Result publication.
+
+If an external email or SMS provider is not configured, display the feature as awaiting configuration instead of pretending messages were sent.
+
+18. DATABASE AND BACKEND ARCHITECTURE
+
+Use the following preferred architecture.
+
+Backend:
+
+- Python.
+- Django.
+- Django REST Framework for APIs.
+
+Database:
+
+- SQLite for local development and initial testing.
+- PostgreSQL for production.
+
+Frontend:
+
+- A modern responsive web interface.
+- React and TypeScript where supported.
+- A consistent design system.
+- Accessible forms and tables.
+- Responsive layouts for Android phones, tablets, and desktop computers.
+
+Use Django's ORM and database migrations.
+
+Design the data model for PostgreSQL compatibility.
+
+Keep secrets and credentials in environment variables.
+
+Provide:
+
+- Database models.
+- API endpoints.
+- Serializers.
+- Authentication and authorization.
+- Database migrations.
+- Input validation.
+- Centralized error handling.
+- Automated tests.
+- Setup instructions.
+- Deployment configuration.
+- Example environment-variable file without real secrets.
+- Database backup and restoration instructions.
+
+If Google AI Studio's build environment cannot run Django directly, do not replace the required backend with fake browser-only storage.
+
+Instead, create the frontend and a clearly separated Django backend project, document the API contract, and explain how to deploy and connect them.
+
+Use SQLite only for development and testing. Use PostgreSQL for production.
+
+19. SECURITY REQUIREMENTS
+
+Implement:
+
+- Secure password hashing.
+- Authentication and authorization.
+- Role-based access control.
+- Server-side tenant isolation.
+- Input validation.
+- CSRF protection where applicable.
+- Appropriate CORS configuration.
+- Rate limiting on sensitive endpoints.
+- Secure password reset.
+- Secure session or token handling.
+- Protection against SQL injection.
+- Protection against cross-site scripting.
+- Secure file uploads.
+- Restricted PDF and report access.
+- Audit logging.
+- Environment-based secrets.
+- Safe error messages.
+- Database transaction handling.
+
+Never put secret API keys, database passwords, or private credentials in frontend code.
+
+Never rely on hidden buttons or frontend checks as the only security controls.
+
+Collect only the personal information required by the application and implement appropriate access controls and retention practices.
+
+20. USER INTERFACE AND DESIGN
+
+Create a professional, modern school management interface.
+
+Design requirements:
+
+- Clean layout.
+- Blue and white primary color scheme.
+- Professional typography.
+- Responsive dashboard.
+- Sidebar navigation on desktop.
+- Collapsible navigation on mobile.
+- Readable tables.
+- Search and filtering.
+- Pagination.
+- Loading indicators.
+- Clear validation messages.
+- Confirmation dialogs for important actions.
+- Accessible forms.
+- Consistent icons.
+- Attractive login and registration pages.
+
+Make the application comfortable to use on an Android phone.
+
+Avoid unnecessarily wide tables on mobile.
+
+Provide responsive result-entry screens and readable report cards.
+
+Create a public landing page with:
+
+- Product overview.
+- Features.
+- School registration.
+- Subscription plans.
+- Login.
+- Public result checking.
+- Contact and support information.
+
+Use realistic but clearly identified demonstration data only where necessary.
+
+Never present sample payment records or sample examination results as genuine records.
+
+21. REQUIRED DATABASE ENTITIES
+
+Design and implement appropriate relational models for at least:
+
+- School.
+- User.
+- UserRole or equivalent permission model.
+- SchoolMembership.
+- SchoolSubscription.
+- SubscriptionPlan.
+- PaymentTransaction.
+- AcademicSession.
+- AcademicTerm.
+- Class.
+- ClassArm.
+- Student.
+- Parent or Guardian.
+- TeacherProfile.
+- Subject.
+- ClassSubject.
+- TeacherAssignment.
+- StudentEnrollment.
+- AssessmentComponent.
+- StudentScore.
+- Result.
+- ResultPublication.
+- ResultCorrection.
+- ResultVerificationCode.
+- AttendanceRecord.
+- FeeCategory.
+- StudentFee.
+- FeePayment.
+- Announcement.
+- Notification.
+- AuditLog.
+
+Define primary keys, foreign keys, unique constraints, indexes, and deletion rules.
+
+Prevent duplicate records where appropriate.
+
+Keep historical academic data consistent.
+
+Use database transactions for important operations such as result publication and payment processing.
+
+22. TESTING REQUIREMENTS
+
+Write and run tests for the most important functionality.
+
+At minimum, test:
+
+1. School registration.
+2. School approval and rejection.
+3. Authentication and password reset.
+4. Role-based permissions.
+5. Tenant isolation between two different schools.
+6. Student registration.
+7. Duplicate admission number prevention.
+8. Score validation.
+9. Server-side result calculations.
+10. Grade calculation.
+11. Class position and tie handling.
+12. Result submission and approval.
+13. Result locking and authorized correction.
+14. PDF generation.
+15. Public result verification.
+16. Subscription expiry and renewal.
+17. Payment verification.
+18. Attendance recording.
+19. School-specific report generation.
+
+Include tests that attempt to access School B's records while authenticated as a user from School A. Those requests must be denied.
+
+Do not claim tests passed unless they have actually been executed.
+
+23. DEVELOPMENT APPROACH
+
+Build the application in a logical order.
+
+Phase 1:
+
+- Project structure.
+- Authentication.
+- School registration.
+- Approval workflow.
+- Tenant isolation.
+- Core database models.
+
+Phase 2:
+
+- School dashboard.
+- Academic sessions.
+- Classes.
+- Subjects.
+- Students.
+- Teachers.
+
+Phase 3:
+
+- Assessment configuration.
+- Score entry.
+- Result calculation.
+- Result approval and locking.
+
+Phase 4:
+
+- Individual report cards.
+- Class result sheets.
+- PDF generation.
+- Printing.
+- Public result checking.
+
+Phase 5:
+
+- Attendance.
+- Fee management.
+- Announcements.
+- Notifications.
+
+Phase 6:
+
+- Subscription plans.
+- Billing.
+- Payment integration.
+- Platform administration.
+
+Phase 7:
+
+- Security testing.
+- Automated tests.
+- Deployment.
+- Documentation.
+
+Implement these phases progressively while keeping the application runnable.
+
+Do not create every screen as an unconnected mockup.
+
+Prioritize the working database, authentication, school isolation, and result-processing workflow before optional features.
+
+24. DEPLOYMENT AND HANDOVER
+
+Provide a deployment-ready project structure.
+
+Include:
+
+- Complete source files.
+- Backend requirements.
+- Frontend dependencies.
+- Database migrations.
+- Development startup instructions.
+- Production deployment instructions.
+- PostgreSQL configuration.
+- Environment-variable documentation.
+- Static file configuration.
+- Secure media upload configuration.
+- PDF-generation dependencies.
+- Backup and restore procedures.
+- Initial super-administrator creation instructions.
+- Test execution instructions.
+- Troubleshooting guide.
+
+Do not include real production passwords or API keys.
+
+Clearly identify which services require separate accounts or payment.
+
+Do not assume that generating code automatically deploys the application.
+
+Provide a practical path to publish the platform online and connect the frontend to the deployed backend.
+
+25. FINAL ACCEPTANCE CRITERIA
+
+The project is not complete merely because the dashboard looks attractive.
+
+The implementation must demonstrate that:
+
+- Multiple schools can register independently.
+- A platform administrator can approve schools.
+- Each school can configure its own logo and information.
+- School accounts are securely isolated.
+- Administrators can register students and teachers.
+- Teachers can enter scores for authorized classes.
+- Results are calculated correctly on the server.
+- Results follow an approval and publication workflow.
+- Individual report cards can be printed and downloaded as PDFs.
+- Complete class result sheets can be printed and downloaded as PDFs.
+- Public result checking requires an admission number and secure code.
+- Historical results remain available according to permissions.
+- Subscription records and expiry rules work.
+- Real records persist in the database.
+- Critical security and calculation tests are implemented and executed.
+- Deployment instructions explain how to run the application outside the development environment.
+
+Begin by generating the actual project structure and implementing Phase 1.
+
+First show me the files and architecture you will create, then implement the first working phase. Continue with the next phases without replacing working functionality with mock data or breaking previously completed features.
+
+At the end of every phase, summarize:
+
+1. What has been implemented.
+2. Which files were created or changed.
+3. Which features have been tested.
+4. Which features remain incomplete.
+5. The exact next step required to continue development.
+
+Your goal is a genuine, secure, maintainable multi-school management platform, not merely a visual demonstration.

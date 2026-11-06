@@ -1,0 +1,6 @@
+{
+  "name": "AcademiQ",
+  "description": "AcademiQ — Enterprise Multi-Tenant School Management & Result Platform with automated report card generation, custom result template analyzer, school badge branding, and printing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

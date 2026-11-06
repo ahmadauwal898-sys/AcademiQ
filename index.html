@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AcademiQ — School Management & Result Platform</title>
+    <meta name="description" content="AcademiQ — Enterprise Multi-Tenant School Management & Result Platform with automated report card generation, custom result template analyzer, school badge branding, and printing." />
+    <meta property="og:title" content="AcademiQ — School Management & Result Platform" />
+    <meta property="og:description" content="AcademiQ — Enterprise Multi-Tenant School Management & Result Platform with automated report card generation, custom result template analyzer, school badge branding, and printing." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#1e3a8a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="AcademiQ" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/academiq-icon.png" />
+    <meta property="og:image" content="/academiq-icon.png" />
+    <meta name="twitter:image" content="/academiq-icon.png" />
+    <script>
+      (function() {
+        // Intercept Vite HMR WebSocket connection in iframe environments where HMR is disabled
+        var OriginalWS = window.WebSocket;
+        if (OriginalWS) {
+          function PatchedWebSocket(url, protocols) {
+            var isViteHmr = false;
+            if (typeof protocols === 'string' && protocols === 'vite-hmr') {
+              isViteHmr = true;
+            } else if (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) {
+              isViteHmr = true;
+            } else if (typeof url === 'string' && (url.indexOf('vite-hmr') !== -1 || url.indexOf('@vite') !== -1)) {
+              isViteHmr = true;
+            }
+
+            if (!isViteHmr) {
+              return protocols !== undefined
+                ? new OriginalWS(url, protocols)
+                : new OriginalWS(url);
+            }
+
+            // Provide a graceful mock EventTarget for Vite HMR that stays cleanly open
+            var target = new EventTarget();
+            target.url = String(url);
+            target.protocol = 'vite-hmr';
+            target.readyState = 1; // WebSocket.OPEN
+            target.extensions = '';
+            target.bufferedAmount = 0;
+            target.binaryType = 'blob';
+            target.onopen = null;
+            target.onclose = null;
+            target.onerror = null;
+            target.onmessage = null;
+
+            target.send = function() {};
+            target.close = function(code, reason) {
+              target.readyState = 3;
+              var closeEv = new CloseEvent('close', { wasClean: true, code: code || 1000, reason: reason || '' });
+              if (typeof target.onclose === 'function') {
+                target.onclose(closeEv);
+              }
+              target.dispatchEvent(closeEv);
+            };
+
+            setTimeout(function() {
+              if (target.readyState === 1) {
+                var openEv = new Event('open');
+                if (typeof target.onopen === 'function') {
+                  target.onopen(openEv);
+                }
+                target.dispatchEvent(openEv);
+              }
+            }, 10);
+
+            return target;
+          }
+
+          // Preserve static constants and prototype
+          PatchedWebSocket.CONNECTING = 0;
+          PatchedWebSocket.OPEN = 1;
+          PatchedWebSocket.CLOSING = 2;
+          PatchedWebSocket.CLOSED = 3;
+          PatchedWebSocket.prototype = OriginalWS.prototype;
+
+          window.WebSocket = PatchedWebSocket;
+        }
+
+        // Suppress benign WebSocket closure warnings and console errors
+        var origConsoleError = console.error;
+        console.error = function() {
+          var args = Array.prototype.slice.call(arguments);
+          for (var i = 0; i < args.length; i++) {
+            var item = args[i];
+            if (typeof item === 'string' && (item.indexOf('WebSocket') !== -1 || item.indexOf('closed without opened') !== -1)) {
+              return;
+            }
+            if (item && item.message && typeof item.message === 'string' && (item.message.indexOf('WebSocket') !== -1 || item.message.indexOf('closed without opened') !== -1)) {
+              return;
+            }
+          }
+          return origConsoleError.apply(console, args);
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event && event.reason) {
+            var msg = event.reason.message || event.reason;
+            if (typeof msg === 'string' && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('closed without opened') !== -1)) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          }
+        }, true);
+
+        window.addEventListener('error', function(event) {
+          var msg = event.message || (event.error && event.error.message);
+          if (typeof msg === 'string' && (msg.indexOf('WebSocket') !== -1 || msg.indexOf('closed without opened') !== -1)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        // Immediately capture PWA install prompt event before React hydration
+        window.__academiq_install_prompt = null;
+        window.addEventListener('beforeinstallprompt', function(e) {
+          e.preventDefault();
+          window.__academiq_install_prompt = e;
+          window.dispatchEvent(new CustomEvent('academiq:install-prompt-ready'));
+        });
+        window.addEventListener('appinstalled', function() {
+          window.__academiq_install_prompt = null;
+          window.dispatchEvent(new CustomEvent('academiq:installed'));
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

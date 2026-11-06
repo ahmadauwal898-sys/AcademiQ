@@ -1,0 +1,233 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Helper Functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Super Admin privilege check
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email in ['ahmadauwal898@gmail.com', 'academia.multi.tenant@gmail.com']
+      );
+    }
+
+    // Multi-tenant School Membership & Role Verification
+    function isSchoolMember(schoolId) {
+      return isSignedIn() && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid))
+      );
+    }
+
+    function isSchoolAdmin(schoolId) {
+      return isSignedIn() && (
+        isAdmin() || (
+          exists(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data.role == 'school_admin'
+        )
+      );
+    }
+
+    function isSchoolTeacher(schoolId) {
+      return isSignedIn() && (
+        isAdmin() || (
+          exists(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data.role in ['school_admin', 'teacher']
+        )
+      );
+    }
+
+    function isSchoolBursar(schoolId) {
+      return isSignedIn() && (
+        isAdmin() || (
+          exists(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data.role in ['school_admin', 'bursar']
+        )
+      );
+    }
+
+    // Entity Validation Functions
+    function isValidSchool(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 150
+        && data.status in ['pending', 'approved', 'rejected', 'suspended'];
+    }
+
+    function isValidStudent(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.admission_number is string && data.admission_number.size() > 0 && data.admission_number.size() <= 50
+        && data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 150;
+    }
+
+    function isValidTeacher(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 150
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 150;
+    }
+
+    function isValidParent(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 150;
+    }
+
+    function isValidAttendance(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.student_id is string && data.student_id.size() <= 128
+        && data.class_id is string && data.class_id.size() <= 128
+        && data.date is string && data.date.size() <= 50
+        && data.status in ['present', 'absent', 'late', 'excused'];
+    }
+
+    function isValidFee(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.student_id is string && data.student_id.size() <= 128
+        && data.amount_paid is number && data.amount_paid >= 0
+        && data.receipt_number is string && data.receipt_number.size() > 0 && data.receipt_number.size() <= 100;
+    }
+
+    function isValidScore(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.student_id is string && data.student_id.size() <= 128
+        && data.subject_id is string && data.subject_id.size() <= 128
+        && data.term_id is string && data.term_id.size() <= 128
+        && data.session_id is string && data.session_id.size() <= 128
+        && data.total is number;
+    }
+
+    function isValidTermResult(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.student_id is string && data.student_id.size() <= 128
+        && data.term_id is string && data.term_id.size() <= 128
+        && data.session_id is string && data.session_id.size() <= 128;
+    }
+
+    function isValidSchoolUser(data, schoolId) {
+      return data.id is string && data.id.size() <= 128
+        && data.school_id == schoolId
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 150
+        && data.full_name is string && data.full_name.size() > 0 && data.full_name.size() <= 150
+        && data.role in ['school_admin', 'teacher', 'bursar', 'student_parent'];
+    }
+
+    // Connectivity Test
+    match /test/{testId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Platform Super Admin Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() && isValidId(adminId);
+    }
+
+    // MULTI-TENANT INSTITUTION ROOTS & SUBCOLLECTIONS
+    match /schools/{schoolId} {
+      allow read: if isValidId(schoolId) && (isAdmin() || isSchoolMember(schoolId) || isSignedIn());
+      allow create: if isValidId(schoolId) && (isAdmin() || (isSignedIn() && isValidSchool(incoming())));
+      allow update: if isValidId(schoolId) && (isAdmin() || isSchoolAdmin(schoolId) || isSignedIn()) && isValidSchool(incoming());
+      allow delete: if isValidId(schoolId) && isAdmin();
+
+      // Students
+      match /students/{studentId} {
+        allow read: if isValidId(schoolId) && isValidId(studentId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(studentId) && isSchoolAdmin(schoolId) && isValidStudent(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(studentId) && isSchoolAdmin(schoolId) && isValidStudent(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(studentId) && isSchoolAdmin(schoolId);
+      }
+
+      // Teachers
+      match /teachers/{teacherId} {
+        allow read: if isValidId(schoolId) && isValidId(teacherId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(teacherId) && isSchoolAdmin(schoolId) && isValidTeacher(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(teacherId) && isSchoolAdmin(schoolId) && isValidTeacher(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(teacherId) && isSchoolAdmin(schoolId);
+      }
+
+      // Parents
+      match /parents/{parentId} {
+        allow read: if isValidId(schoolId) && isValidId(parentId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(parentId) && isSchoolAdmin(schoolId) && isValidParent(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(parentId) && isSchoolAdmin(schoolId) && isValidParent(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(parentId) && isSchoolAdmin(schoolId);
+      }
+
+      // Attendance
+      match /attendance/{attendanceId} {
+        allow read: if isValidId(schoolId) && isValidId(attendanceId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(attendanceId) && isSchoolTeacher(schoolId) && isValidAttendance(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(attendanceId) && isSchoolTeacher(schoolId) && isValidAttendance(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(attendanceId) && isSchoolAdmin(schoolId);
+      }
+
+      // Fees
+      match /fees/{feeId} {
+        allow read: if isValidId(schoolId) && isValidId(feeId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(feeId) && isSchoolBursar(schoolId) && isValidFee(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(feeId) && isSchoolBursar(schoolId) && isValidFee(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(feeId) && isSchoolAdmin(schoolId);
+      }
+
+      // Examination & Assessment Scores
+      match /scores/{scoreId} {
+        allow read: if isValidId(schoolId) && isValidId(scoreId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(scoreId) && isSchoolTeacher(schoolId) && isValidScore(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(scoreId) && isSchoolTeacher(schoolId) && isValidScore(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(scoreId) && isSchoolAdmin(schoolId);
+      }
+
+      // Term Results
+      match /term_results/{resultId} {
+        allow read: if isValidId(schoolId) && isValidId(resultId) && isSchoolMember(schoolId);
+        allow create: if isValidId(schoolId) && isValidId(resultId) && isSchoolAdmin(schoolId) && isValidTermResult(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(resultId) && isSchoolAdmin(schoolId) && isValidTermResult(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(resultId) && isSchoolAdmin(schoolId);
+      }
+
+      // School Users (Staff / Admin profiles)
+      match /users/{userId} {
+        allow read: if isValidId(schoolId) && isValidId(userId) && (isAdmin() || (isSignedIn() && request.auth.uid == userId) || isSchoolAdmin(schoolId));
+        allow create: if isValidId(schoolId) && isValidId(userId) && (isSchoolAdmin(schoolId) || (isSignedIn() && request.auth.uid == userId)) && isValidSchoolUser(incoming(), schoolId);
+        allow update: if isValidId(schoolId) && isValidId(userId) && isSchoolAdmin(schoolId) && isValidSchoolUser(incoming(), schoolId) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(userId) && isSchoolAdmin(schoolId);
+      }
+
+      // Cloud Sync Snapshots
+      match /cloud_sync/{syncId} {
+        allow read: if isValidId(schoolId) && isValidId(syncId) && (isAdmin() || isSchoolAdmin(schoolId) || isSignedIn());
+        allow create: if isValidId(schoolId) && isValidId(syncId) && (isAdmin() || isSchoolAdmin(schoolId) || isSignedIn());
+        allow update: if isValidId(schoolId) && isValidId(syncId) && (isAdmin() || isSchoolAdmin(schoolId) || isSignedIn()) && incoming().id == existing().id;
+        allow delete: if isValidId(schoolId) && isValidId(syncId) && (isAdmin() || isSchoolAdmin(schoolId));
+      }
+    }
+  }
+}

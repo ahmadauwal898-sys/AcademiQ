@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm; /* Strict equal 10mm margins on all four sides */
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    font-size: 9pt;
+  }
+
+  #root {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Universal Dashboard Print Isolation: Hide all dashboard chrome, headers, navbars, sidebars, and footers */
+  body.has-print-modal header,
+  body.has-print-modal nav,
+  body.has-print-modal footer,
+  body.has-print-modal main,
+  body.has-print-modal > div > header,
+  body.has-print-modal > div > nav,
+  body.has-print-modal > div > footer,
+  body.has-print-modal > div > main,
+  body.has-print-modal .super-admin-impersonation-bar,
+  header,
+  nav,
+  footer,
+  button,
+  .print\:hidden,
+  .no-print,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  /* Reset modal backdrop wrappers so printable sheet is clean and visible */
+  .fixed.inset-0 {
+    position: static !important;
+    overflow: visible !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  /* Strict Single A4 Printable Report Sheet Isolation (190mm x 277mm printable box) */
+  #report-card-print-area,
+  #printable-report-card {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: 190mm !important;
+    max-width: 190mm !important;
+    height: 277mm !important;
+    max-height: 277mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #ffffff !important;
+  }
+
+  .print-page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Ensure school badge and all images render sharply on printed sheets */
+  img, svg, .school-badge-img, .print-badge {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  /* Keep watermark centered behind the table in print */
+  .watermark-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+  }
+
+  .watermark-overlay img {
+    opacity: 0.08 !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  /* Ensure background colors on table headers print */
+  th, td {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

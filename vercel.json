@@ -1,0 +1,58 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/sw.js",
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "service-worker-allowed": "/",
+        "cache-control": "no-cache, no-store, must-revalidate"
+      }
+    },
+    {
+      "src": "/manifest.webmanifest",
+      "dest": "/manifest.webmanifest",
+      "headers": {
+        "content-type": "application/manifest+json; charset=utf-8",
+        "access-control-allow-origin": "*"
+      }
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json",
+      "headers": {
+        "content-type": "application/manifest+json; charset=utf-8",
+        "access-control-allow-origin": "*"
+      }
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

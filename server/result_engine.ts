@@ -67,6 +67,11 @@ export function calculateSubjectScore(
   const wCa3 = weights.find(w => w.code === 'ca3')?.max_score ?? 10;
   const wExam = weights.find(w => w.code === 'exam')?.max_score ?? 70;
 
+  if (ca1 < 0 || ca1 > wCa1) errors.push(`CA1 mark must be between 0 and ${wCa1}`);
+  if (ca2 < 0 || ca2 > wCa2) errors.push(`CA2 mark must be between 0 and ${wCa2}`);
+  if (ca3 < 0 || ca3 > wCa3) errors.push(`CA3 mark must be between 0 and ${wCa3}`);
+  if (exam < 0 || exam > wExam) errors.push(`Exam mark must be between 0 and ${wExam}`);
+
   const safeCa1 = Math.max(0, Math.min(Number(ca1) || 0, wCa1));
   const safeCa2 = Math.max(0, Math.min(Number(ca2) || 0, wCa2));
   const safeCa3 = Math.max(0, Math.min(Number(ca3) || 0, wCa3));
@@ -86,7 +91,7 @@ export function calculateSubjectScore(
     }
   }
 
-  return { total, grade, remark };
+  return { total, grade, remark, ...(errors.length > 0 ? { errors } : {}) };
 }
 
 /**

@@ -1,13 +1,19 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Initialize Firebase App
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore with the provisioned database ID (CRITICAL)
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Initialize Firestore with auto-detecting long polling and the provisioned database ID
+export const db = initializeFirestore(
+  app,
+  {
+    experimentalAutoDetectLongPolling: true,
+  },
+  firebaseConfig.firestoreDatabaseId
+);
 
 // Initialize Firebase Auth
 export const auth = getAuth(app);
@@ -63,12 +69,17 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 export async function testConnection(): Promise<void> {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log('Firebase Firestore connection verified successfully.');
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+    console.log('Firebase Firestore backend connection verified successfully.');
+  } catch (error: any) {
+    if (
+      error?.code === 'unavailable' ||
+      error?.message?.includes('unavailable') ||
+      error?.message?.includes('the client is offline') ||
+      error?.message?.includes('Could not reach Cloud Firestore')
+    ) {
+      console.info('Firebase Firestore: operating in offline-first mode while connecting to cloud backend.');
     } else {
-      console.warn('Firebase connectivity check note:', error);
+      console.warn('Firebase connectivity note:', error?.message || error);
     }
   }
 }

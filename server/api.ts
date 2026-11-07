@@ -384,13 +384,27 @@ router.post('/auth/login', (req, res) => {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
-  const user = db.prepare(`
+  const cleanEmail = String(email || '').trim().toLowerCase();
+
+  let user = db.prepare(`
     SELECT u.*, s.name as school_name, s.status as school_status, s.logo_url as school_logo,
            s.is_payment_verified, s.payment_verified_at, s.payment_code_used
     FROM users u
     LEFT JOIN schools s ON u.school_id = s.id
     WHERE u.email = ?
-  `).get(email.toLowerCase()) as any;
+  `).get(cleanEmail) as any;
+
+  // Fallback alias resolution for super admin
+  if (!user && (cleanEmail === 'academiq.multi.tenant@gmail.com' || cleanEmail === 'academia.multi.tenant@gmail.com')) {
+    user = db.prepare(`
+      SELECT u.*, s.name as school_name, s.status as school_status, s.logo_url as school_logo,
+             s.is_payment_verified, s.payment_verified_at, s.payment_code_used
+      FROM users u
+      LEFT JOIN schools s ON u.school_id = s.id
+      WHERE u.role = 'super_admin'
+      LIMIT 1
+    `).get() as any;
+  }
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
@@ -468,7 +482,7 @@ router.post('/auth/firebase-login', (req, res) => {
   const cleanEmail = String(email).trim().toLowerCase();
 
   // Check if this is super admin (by email match)
-  const isSuperAdminEmail = ['ahmadauwal898@gmail.com', 'academia.multi.tenant@gmail.com'].includes(cleanEmail);
+  const isSuperAdminEmail = ['ahmadauwal898@gmail.com', 'academia.multi.tenant@gmail.com', 'academiq.multi.tenant@gmail.com'].includes(cleanEmail);
 
   let user: any = null;
   if (isSuperAdminEmail || role_hint === 'super_admin') {

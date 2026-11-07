@@ -3,11 +3,44 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 
-const DB_DIR = path.resolve(process.cwd(), 'data');
+export const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT
+);
+
+const DB_DIR = isServerless
+  ? path.join('/tmp', 'academiq_data')
+  : path.resolve(process.cwd(), 'data');
+
 if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(DB_DIR, { recursive: true });
+  } catch (err) {
+    console.warn('[DB] Failed to create DB_DIR:', err);
+  }
 }
+
 const DB_PATH = path.join(DB_DIR, 'multischool.sqlite');
+
+// On serverless cold start, bootstrap /tmp with the bundled sqlite database if it exists
+if (isServerless && !fs.existsSync(DB_PATH)) {
+  const seedCandidates = [
+    path.resolve(process.cwd(), 'data', 'multischool.sqlite'),
+    path.resolve('/var/task', 'data', 'multischool.sqlite')
+  ];
+  for (const candidate of seedCandidates) {
+    if (fs.existsSync(candidate)) {
+      try {
+        fs.copyFileSync(candidate, DB_PATH);
+        console.log(`[Database] Bootstrapped /tmp database from ${candidate}`);
+        break;
+      } catch (copyErr) {
+        console.warn(`[Database] Could not copy seed from ${candidate}:`, copyErr);
+      }
+    }
+  }
+}
 
 export const db = new DatabaseSync(DB_PATH);
 
@@ -472,6 +505,34 @@ export function initDatabase() {
 
   seedInitialData();
   ensureComprehensiveAcademicData();
+
+  // If running in fresh serverless environment and schools need restoration
+  try {
+    const schoolCount = (db.prepare('SELECT COUNT(*) as count FROM schools').get() as { count: number }).count;
+    if (schoolCount === 0) {
+      const backupCandidates = [
+        path.join(BACKUP_DIR, 'latest_full_database.json'),
+        path.resolve(process.cwd(), 'data', 'backups', 'latest_full_database.json'),
+        path.resolve('/var/task', 'data', 'backups', 'latest_full_database.json'),
+        path.join(BACKUP_DIR, 'latest_backup.json')
+      ];
+      for (const bPath of backupCandidates) {
+        if (fs.existsSync(bPath)) {
+          try {
+            const raw = fs.readFileSync(bPath, 'utf-8');
+            const parsed = JSON.parse(raw);
+            restoreDatabaseFromBackup(parsed);
+            console.log(`[Database] Auto-restored data from ${bPath}`);
+            break;
+          } catch (e) {
+            console.warn('[Database] Could not auto-restore from backup:', e);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Database] Auto-restore check error:', err);
+  }
 }
 
 export const DEFAULT_APEX_BADGE = `data:image/svg+xml;utf8,${encodeURIComponent(`
@@ -600,25 +661,33 @@ function seedInitialData() {
     }
   }
 
-  // Ensure Super Admin exists with required credentials: academia.multi.tenant@gmail.com / @Candfe69a9
+  // Ensure Super Admin exists with required credentials:
+  // academia.multi.tenant@gmail.com and academiq.multi.tenant@gmail.com with password @Candfe69a9
   const { hash: superAdminHash, salt: superAdminSalt } = hashPassword('@Candfe69a9');
-  const existingSuperAdmin = db.prepare('SELECT id FROM users WHERE role = ? OR id = ?').get('super_admin', 'usr_superadmin') as { id: string } | undefined;
-  if (!existingSuperAdmin) {
-    db.prepare(`
-      INSERT INTO users (id, school_id, email, password_hash, salt, full_name, phone, role)
-      VALUES (?, NULL, ?, ?, ?, ?, ?, ?)
-    `).run('usr_superadmin', 'academia.multi.tenant@gmail.com', superAdminHash, superAdminSalt, 'Platform Super Administrator', '+2348000000001', 'super_admin');
-  } else {
-    db.prepare(`
-      UPDATE users
-      SET email = 'academia.multi.tenant@gmail.com',
-          password_hash = ?,
-          salt = ?,
-          full_name = 'Platform Super Administrator',
-          role = 'super_admin',
-          school_id = NULL
-      WHERE id = ?
-    `).run(superAdminHash, superAdminSalt, existingSuperAdmin.id);
+  const superAdminList = [
+    { id: 'usr_superadmin', email: 'academia.multi.tenant@gmail.com' },
+    { id: 'usr_superadmin_q', email: 'academiq.multi.tenant@gmail.com' }
+  ];
+
+  for (const adm of superAdminList) {
+    const existing = db.prepare('SELECT id FROM users WHERE email = ? OR id = ?').get(adm.email, adm.id) as { id: string } | undefined;
+    if (!existing) {
+      db.prepare(`
+        INSERT INTO users (id, school_id, email, password_hash, salt, full_name, phone, role)
+        VALUES (?, NULL, ?, ?, ?, ?, ?, ?)
+      `).run(adm.id, adm.email, superAdminHash, superAdminSalt, 'Platform Super Administrator (Ahmad Auwal)', '+2349155377861', 'super_admin');
+    } else {
+      db.prepare(`
+        UPDATE users
+        SET email = ?,
+            password_hash = ?,
+            salt = ?,
+            full_name = 'Platform Super Administrator (Ahmad Auwal)',
+            role = 'super_admin',
+            school_id = NULL
+        WHERE id = ?
+      `).run(adm.email, superAdminHash, superAdminSalt, existing.id);
+    }
   }
 
   // Seed sample school: Apex Academy (Approved)
@@ -1219,7 +1288,30 @@ export function generateDefaultSchoolLogo(schoolName: string, primaryColor = '#1
 
 const BACKUP_DIR = path.join(DB_DIR, 'backups');
 if (!fs.existsSync(BACKUP_DIR)) {
-  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  } catch (_) {}
+}
+
+// On serverless, copy any pre-bundled backups from read-only package directory to writable /tmp
+if (isServerless) {
+  const seedBackupCandidates = [
+    path.resolve(process.cwd(), 'data', 'backups'),
+    path.resolve('/var/task', 'data', 'backups')
+  ];
+  for (const seedDir of seedBackupCandidates) {
+    if (fs.existsSync(seedDir)) {
+      try {
+        const files = fs.readdirSync(seedDir);
+        for (const file of files) {
+          const dest = path.join(BACKUP_DIR, file);
+          if (!fs.existsSync(dest)) {
+            fs.copyFileSync(path.join(seedDir, file), dest);
+          }
+        }
+      } catch (_) {}
+    }
+  }
 }
 
 export function flushDatabaseToDisk(): boolean {
